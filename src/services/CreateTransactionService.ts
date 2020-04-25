@@ -1,9 +1,10 @@
-import { getRepository } from 'typeorm';
+import { getRepository, getCustomRepository, TransactionRepository } from 'typeorm';
 
-// import AppError from '../errors/AppError';
+import AppError from '../errors/AppError';
 import Transaction from '../models/Transaction';
 import Category from '../models/Category';
 import CreateCategoryService from './CreateCategoryService';
+import TransactionsRepository from '../repositories/TransactionsRepository';
 
 interface Request {
   title: string;
@@ -19,20 +20,15 @@ class CreateTransactionService {
     type,
     category,
   }: Request): Promise<Transaction> {
-    const transactionRepository = getRepository(Transaction);
+    const transactionRepository = getCustomRepository(TransactionsRepository);
+    const balance = await transactionRepository.getBalance();
+
+    if (type === 'outcome' && value > balance.total) {
+      throw new AppError('Your balance is not enough.');
+    }
 
     const categoryService = new CreateCategoryService();
     const categoryObj = await categoryService.execute({ title: category });
-
-    // const checkTransactionExists = await transactionRepository.findOne({
-    //   where: { email },
-    // });
-
-    // if (checkTransactionExists) {
-    //   throw new AppError('This email is already used.');
-    // }
-
-    // const hashedPassword = await hash(password, 8);
 
     const transaction = transactionRepository.create({
       title,
