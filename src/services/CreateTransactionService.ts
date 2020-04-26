@@ -28,13 +28,13 @@ class CreateTransactionService {
     }
 
     const categoryService = new CreateCategoryService();
-    const categoryObj = await categoryService.execute({ title: category });
+    const { id: category_id } = await categoryService.execute({ title: category });
 
     const transaction = transactionRepository.create({
       title,
       value,
       type,
-      category_id: categoryObj.id,
+      category_id,
     });
 
     await transactionRepository.save(transaction);
