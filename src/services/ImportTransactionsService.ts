@@ -43,18 +43,19 @@ class ImportTransactionsService {
     rows.splice(0, 1);
 
     // File iteration
-    const finished = rows.map(async t => {
-      const [title, type, value, category] = t.split(', ');
+    const finished = [];
+    for (let i = 0; i < rows.length; i++) {
+      const [title, type, value, category] = rows[i].split(', ');
 
       const transaction: RequestTransaction = {
-        title: title,
+        title,
         type: type as 'income' | 'outcome',
         value: +value,
-        category: category,
+        category,
       };
 
-      return await createTransaction.execute(transaction);
-    });
+      await finished.push(await createTransaction.execute(transaction));
+    }
 
     // Map returns an array of Promises<Transaction>
     transactions = await Promise.all(finished);
